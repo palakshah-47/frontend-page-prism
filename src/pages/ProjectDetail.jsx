@@ -1,24 +1,29 @@
-import React, { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import { getProject } from '../services/project'
+import React, { useCallback } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useApp } from '../context/AppContext'
 import Button from '../components/Button'
+import UpdateProject from '../components/UpdateProject'
 import styles from './ProjectDetail.module.css'
 
 const ProjectDetail = () => {
-  const [project, setProject] = useState(null)
+  const { state, actions } = useApp()
+  const navigate = useNavigate()
+  const { projects, loading } = state
   const { id } = useParams()
 
-  useEffect(() => {
-    const fetchProject = async () => {
-      const projectData = await getProject(id)
-      setProject(projectData)
-    }
-    fetchProject()
-  }, [id])
+  const project = projects.find((item) => item.id === id)
 
-  if (!project) {
+  if (loading && !project) {
     return <div>Loading...</div>
   }
+
+  if (!project) {
+    return <div>Project not found.</div>
+  }
+
+  const onSaved = useCallback(() => {
+    navigate('/projects');
+  }, [])
 
   return (
     <div className={styles.container}>
@@ -50,9 +55,17 @@ const ProjectDetail = () => {
           <p>No inspirations added yet.</p>
         )}
       </div>
+      <UpdateProject project={project} onSaved={onSaved}/>
       <div className={styles.buttonContainer}>
-        <Button className={styles.editButton}>Edit Project</Button>
-        <Button className={styles.deleteButton}>Delete Project</Button>
+        <Button
+          className={styles.deleteButton}
+          onClick={async () => {
+            await actions.deleteProject(project.id)
+            navigate('/projects')
+          }}
+        >
+          Delete Project
+        </Button>
       </div>
     </div>
   )

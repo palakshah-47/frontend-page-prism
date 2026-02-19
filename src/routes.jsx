@@ -1,8 +1,11 @@
+import { lazy } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import App from './App'
-import Dashboard from './pages/Dashboard'
-import Projects from './pages/Projects'
-import ProjectDetail from './pages/ProjectDetail'
+
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Projects = lazy(() => import('./pages/Projects'))
+const ProjectDetail = lazy(() => import('./pages/ProjectDetail'))
+
 const router = createBrowserRouter([
   {
     path: '/',

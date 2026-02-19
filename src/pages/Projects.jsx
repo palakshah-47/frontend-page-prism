@@ -1,30 +1,25 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
-import { getAllProjects, createProject } from '../services/project'
+import { useApp } from '../context/AppContext'
 import Button from '../components/Button'
 
 const Projects = () => {
-  const [projects, setProjects] = useState([])
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      const allProjects = await getAllProjects()
-      setProjects(allProjects)
-    }
-    fetchProjects()
-  }, [])
+  const { state, actions } = useApp()
+  const { projects, loading, error } = state
 
   const handleCreateProject = async () => {
-    const newProject = await createProject({
+    await actions.createProject({
       name: 'New Project',
       description: 'A new project description',
+      inspirations: [],
     })
-    setProjects([...projects, newProject])
   }
 
   return (
     <div>
       <Button onClick={handleCreateProject}>Create New Project</Button>
+      {loading && projects.length === 0 ? <p>Loading projects...</p> : null}
+      {error ? <p>{error}</p> : null}
       {projects.map((project) => (
         <div key={project.id} className="p-4 border-b border-gray-200">
           <Link to={`/projects/${project.id}`} className="block">
