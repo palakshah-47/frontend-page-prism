@@ -78,13 +78,22 @@ const Projects = () => {
       />
       <Button onClick={handleCreateProject}>Create New Project</Button>
       <div style={{display: 'flex', flexDirection: 'column', gap:'2rem'}}>
-      {projects.map((project) => (       
+      {/* {projects.map((project) => (       
         <ProjectCard
           key={project.id}
           project={project}
           inspirationCount={inspirationByProject[project.id]?.count ?? 0}
           thumbnailUrl={inspirationByProject[project.id]?.thumbnailUrl}
         />       
+      ))} */}
+      {projects.map((project) => (
+        <div key={project.id} className="p-4 border-b border-gray-200">
+          <Link to={`/projects/${project.id}`} className="block">
+            <h2 className="text-lg font-semibold">{project.name}</h2>
+            <small>{project.id}</small>
+            <p className="text-sm text-gray-600">{project.description}</p>
+          </Link>
+        </div>
       ))}
        </div>
     </div>
