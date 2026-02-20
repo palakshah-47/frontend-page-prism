@@ -26,7 +26,7 @@ export async function createProject(
 }
 
 /**
- * Retrieves a project from the database by its ID.
+ * Retrieves a project from the database by its ID, with inspirations loaded from the inspirations store.
  * @param id - The ID of the project to retrieve.
  * @param latencyMs - Optional. The number of milliseconds to simulate latency.
  * @returns A Promise that resolves to the Project if found, or undefined if not found.
@@ -37,7 +37,10 @@ export async function getProject(
 ): Promise<Project | undefined> {
   await mockLatency(latencyMs)
   const db = await getDB()
-  return db.get('projects', id)
+  const project = await db.get('projects', id)
+  if (!project) return undefined
+  const inspirations = await db.getAllFromIndex('inspirations', 'by-project', id)
+  return { ...project, inspirations }
 }
 
 /**
