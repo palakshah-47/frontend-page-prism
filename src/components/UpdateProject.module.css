@@ -1,0 +1,11 @@
+.input {
+  background: white;
+  width: 10rem;
+  border: 1px solid gray;
+  padding-left: 4px;
+  margin-left: 4px;
+}
+.label {
+  width: 4rem;
+  margin-left: 4px;
+}
