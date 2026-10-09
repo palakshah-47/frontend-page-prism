@@ -21,8 +21,7 @@ const ProjectDetail = () => {
   }
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.heading}>{project.name}</h1>
+    <div className={styles.container}>      
       <p className={styles.description}>{project.description}</p>
       <div className={styles.section}>
         <h2 className={styles.subheading}>Project Details</h2>
