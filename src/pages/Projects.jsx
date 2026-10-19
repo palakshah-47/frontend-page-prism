@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { getAllProjects, createProject } from '../services/project'
 import Button from '../components/Button'
+import UpdateProject from './UpdateProject'
 
 const Projects = () => {
   const [projects, setProjects] = useState([])
@@ -9,6 +10,7 @@ const Projects = () => {
   const [description, setDescription] = useState('')
   const [error, setError] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -17,6 +19,13 @@ const Projects = () => {
     }
     fetchProjects()
   }, [])
+
+  const visibleProjects = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return projects
+      .filter((p) => p.name.toLowerCase().includes(q))
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+  }, [projects, query])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -43,42 +52,17 @@ const Projects = () => {
 
   return (
     <div>
-      <form onSubmit={handleSubmit} className="mb-6 space-y-4">
-        <div>
-          <label htmlFor="project-name" className="block text-sm font-medium">
-            Name
-          </label>
-          <input
-            id="project-name"
-            autoFocus
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            aria-invalid={Boolean(error)}
-            aria-describedby={error ? 'project-error' : undefined}
-            className="mt-1 w-[50%] rounded border border-gray-300 p-2 bg-transparent"
-          ></input>
-        </div>
-        <div>
-          <label htmlFor="project-desc" className="block text-sm font-medium">
-            Description
-          </label>
-          <textarea
-            id="project-desc"
-            value={description}
-            className="mt-1 w-[50%] rounded border border-gray-300 bg-transparent"
-            onChange={(e) => setDescription(e.target.value)}
-          ></textarea>
-        </div>
-        {error && (
-          <p id="project-error" role="alert" className="text-sm text-red-600">
-            {error}
-          </p>
-        )}
-        <Button type="submit" disabled={isSaving} className="">
-          {isSaving ? 'Creating...' : 'Create Project'}
-        </Button>
-      </form>
-      {projects.map((project) => (
+      <UpdateProject setProjects={setProjects} />
+      <label htmlFor="search">Search Projects:</label>
+      <input
+        id="search"
+        value={query}
+        placeholder="Search Projects..."
+        type="search"
+        onChange={(e) => setQuery(e.target.value)}
+        className="p-2 rounded border border-separate bg-transparent ml-2"
+      ></input>
+      {visibleProjects.map((project) => (
         <div key={project.id} className="p-4 border-b border-gray-200">
           <Link
             to={`/projects/${project.id}/${encodeURIComponent(project?.name || 'project')}`}

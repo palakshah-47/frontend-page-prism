@@ -1,28 +1,40 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { getProject, deleteProject } from '../services/project'
 import Button from '../components/Button'
 import styles from './ProjectDetail.module.css'
+import UpdateProject from './UpdateProject'
 
 const ProjectDetail = () => {
   const [project, setProject] = useState(null)
   const { id } = useParams()
   const navigate = useNavigate()
+  const [isUpdate, setIsUpdate] = useState(false)
+  const [status, setStatus] = useState('loading')
 
   useEffect(() => {
     const fetchProject = async () => {
-      const projectData = await getProject(id)
-      setProject(projectData)
+      let cancelled = false
+      try {
+        if (cancelled) return
+        const projectData = await getProject(id)
+        if (!projectData) {
+          setStatus('notfound')
+          return
+        }
+        setProject(projectData)
+        setStatus('ready')
+      } catch (err) {
+        !cancelled && setStatus('error')
+      }
+      return () => {
+        cancelled = true
+      }
     }
     fetchProject()
   }, [id])
 
-  if (!project) {
-    return <div>Loading...</div>
-  }
-
   const handleDelete = async () => {
-    if (!window.confirm(`Delete "${project.name}"? This can't be undone`)) return
     try {
       await deleteProject(project.id)
       navigate('/projects')
@@ -30,6 +42,17 @@ const ProjectDetail = () => {
       alert('Could not delete the project. Please try again.')
     }
   }
+
+  if (status === 'loading') return <div role="status">Loading...</div>
+  if (status === 'notfound')
+    return (
+      <div>
+        <p>We coundn't find that project.</p>
+        <Link to="/projects">Back to Projects</Link>
+      </div>
+    )
+  if (status === 'error')
+    return <div role="alert">Something went wrong loading this project</div>
 
   return (
     <div className={styles.container}>
@@ -61,9 +84,14 @@ const ProjectDetail = () => {
         )}
       </div>
       <div className={styles.buttonContainer}>
-        <Button className={styles.editButton}>Edit Project</Button>
-        <Button className={styles.deleteButton} onClick={handleDelete}>Delete Project</Button>
+        <Button className={styles.editButton} onClick={() => setIsUpdate(true)}>
+          Edit Project
+        </Button>
+        <Button className={styles.deleteButton} onClick={handleDelete}>
+          Delete Project
+        </Button>
       </div>
+      {isUpdate && <UpdateProject project={project} />}
     </div>
   )
 }
