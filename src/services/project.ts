@@ -80,7 +80,7 @@ export async function updateProject(
 }
 
 /**
- * Deletes a project from the database.
+ * Deletes a project and all of its inspirations from the database.
  * @param id - The ID of the project to delete.
  * @param latencyMs - Optional. The number of milliseconds to simulate latency.
  * @returns A Promise that resolves when the project is deleted.
@@ -91,5 +91,17 @@ export async function deleteProject(
 ): Promise<void> {
   await mockLatency(latencyMs)
   const db = await getDB()
-  await db.delete('projects', id)
+  const tx = db.transaction(['projects', 'inspirations'], 'readwrite')
+  const inspirationStore = tx.objectStore('inspirations')
+  const inspirationIds = await inspirationStore
+    .index('by-project')
+    .getAllKeys(id)
+
+  await Promise.all(
+    inspirationIds.map((inspirationId) =>
+      inspirationStore.delete(inspirationId)
+    )
+  )
+  await tx.objectStore('projects').delete(id)
+  await tx.done
 }

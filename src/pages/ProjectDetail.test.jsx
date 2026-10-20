@@ -9,6 +9,14 @@ jest.mock('../services/project', () => ({
   updateProject: jest.fn(),
 }))
 
+beforeEach(() => {
+  jest.clearAllMocks()
+})
+
+afterEach(() => {
+  jest.restoreAllMocks()
+})
+
 const mockProject = {
   id: 'project-1',
   name: 'Alpha',
@@ -69,6 +77,8 @@ describe('project detail page renders on page load', () => {
   it('deletes the project when clicking on delete Project button', async () => {
     getProject.mockResolvedValue(mockProject)
     deleteProject.mockResolvedValue()
+    jest.spyOn(window, 'confirm').mockReturnValue(true)
+
     render(
       <MemoryRouter>
         <ProjectDetail />
@@ -77,8 +87,29 @@ describe('project detail page renders on page load', () => {
 
     expect(await screen.findByText('Project one')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Delete Project' }))
+
     await waitFor(() => {
       expect(deleteProject).toHaveBeenCalledWith('project-1')
     })
+    expect(window.confirm).toHaveBeenCalledWith(
+      'Deleting this project will also delete all its inspirations. Are you sure?'
+    )
+  })
+
+  it('does not delete the project when deletion is canceled', async () => {
+    getProject.mockResolvedValue(mockProject)
+    jest.spyOn(window, 'confirm').mockReturnValue(false)
+
+    render(
+      <MemoryRouter>
+        <ProjectDetail />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText('Project one')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Delete Project' }))
+
+    expect(window.confirm).toHaveBeenCalled()
+    expect(deleteProject).not.toHaveBeenCalled()
   })
 })

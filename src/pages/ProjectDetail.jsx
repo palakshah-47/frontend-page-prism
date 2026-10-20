@@ -13,8 +13,8 @@ const ProjectDetail = () => {
   const [status, setStatus] = useState('loading')
 
   useEffect(() => {
+    let cancelled = false
     const fetchProject = async () => {
-      let cancelled = false
       try {
         if (cancelled) return
         const projectData = await getProject(id)
@@ -27,19 +27,24 @@ const ProjectDetail = () => {
       } catch (err) {
         !cancelled && setStatus('error')
       }
-      return () => {
-        cancelled = true
-      }
     }
     fetchProject()
+    return () => {
+      cancelled = true
+    }
   }, [id])
 
   const handleDelete = async () => {
+    const confirmed = window.confirm(
+      'Deleting this project will also delete all its inspirations. Are you sure?'
+    )
+    if (!confirmed) return
+
     try {
       await deleteProject(project.id)
       navigate('/projects')
     } catch {
-      alert('Could not delete the project. Please try again.')
+      window.alert('Could not delete the project. Please try again.')
     }
   }
 

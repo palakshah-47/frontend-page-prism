@@ -6,10 +6,6 @@ import UpdateProject from './UpdateProject'
 
 const Projects = () => {
   const [projects, setProjects] = useState([])
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [error, setError] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
   const [query, setQuery] = useState('')
 
   useEffect(() => {
@@ -26,29 +22,6 @@ const Projects = () => {
       .filter((p) => p.name.toLowerCase().includes(q))
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
   }, [projects, query])
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    if (!name.trim()) {
-      setError('Project name is required.')
-      return
-    }
-    setError('')
-    setIsSaving(true)
-    try {
-      const createdProj = await createProject({
-        name: name.trim(),
-        description: description.trim(),
-        inspirations: [],
-      })
-      setProjects((prev) => [...prev, createdProj])
-    } catch (err) {
-      setError('Could not create Project. Please try again')
-    } finally {
-      setIsSaving(false)
-    }
-  }
 
   return (
     <div>
