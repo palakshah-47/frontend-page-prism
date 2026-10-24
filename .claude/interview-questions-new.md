@@ -32,6 +32,94 @@ Things worth noticing and mentioning. Interviewers often plant these.
 
 ---
 
+## Part 1: Quick Stories (Easy to Implement, 10–20 min each)
+
+Small, self-contained stories that use the services you already have. Practise these first. The detailed stories further down are for deeper discussion.
+
+### Q1. Confirm Before Deleting a Project
+> As a user, I want to confirm before a project is deleted, so I don't delete one by accident.
+
+- **Done when:** Clicking "Delete Project" asks "Delete this project?". Cancel does nothing. OK deletes and goes to `/projects`.
+- **How:** In `handleDelete` in [ProjectDetail.jsx](../src/pages/ProjectDetail.jsx), return early if `window.confirm(...)` is false. Replace `alert` with an inline error message in state.
+- **Test:** Mock `window.confirm` to return `false` and check that `deleteProject` is not called.
+
+### Q2. Empty State and "No Results" on the Projects Page
+> As a user, I want a clear message when I have no projects or my search matches nothing.
+
+- **Done when:** With no projects, the page shows "No projects yet. Create one above." When a search matches nothing, it shows "No projects match "xyz"" and a "Clear search" button.
+- **How:** In [Projects.jsx](../src/pages/Projects.jsx), check `projects.length === 0` and `visibleProjects.length === 0`. "Clear search" calls `setQuery('')`.
+- **Test:** Render with an empty list, then type a search term that doesn't match.
+
+### Q3. Sort Projects
+> As a user, I want to sort my projects by name or by last updated.
+
+- **Done when:** A `<select>` offers "Recently updated" (the default) and "Name A–Z", and the list re-orders right away.
+- **How:** Add a `sortBy` state. In the existing `useMemo`, pick the comparator based on `sortBy` (use `localeCompare` for name). Add `sortBy` to the dependency array. Copy the array before sorting: `[...filtered].sort(...)`.
+- **Test:** Change the select and check the order of the headings.
+
+### Q4. Dashboard Summary
+> As a user, I want the dashboard to show how many projects I have and my most recent ones.
+
+- **Done when:** [Dashboard.jsx](../src/pages/Dashboard.jsx) shows "You have N projects" and links to the 3 most recently updated projects. It shows a loading state while fetching.
+- **How:** Call `getAllProjects()` in `useEffect`, sort by `updatedAt` descending, `slice(0, 3)`, and render each one as a `<Link>`.
+- **Test:** Mock `getAllProjects` and check the count text and the 3 links.
+
+### Q5. Add an Inspiration by URL (Simple Version)
+> As a designer, I want to paste a URL into a project and see it listed as an inspiration.
+
+- **Done when:** On the project detail page, a URL input and an "Add" button save an inspiration. It appears in the list, and its title links to the site in a new tab. An empty or invalid URL shows an error. The button is disabled while saving.
+- **How:**
+  1. Call `getMetadata(url)` from [api.js](../src/utils/api.js). If it fails, fall back to `{ url, title: url }`.
+  2. Call `createInspiration({ projectId: id, websiteMetadata, notes: '' })`.
+  3. Load the list with `getInspirationsByProject(id)` instead of reading `project.inspirations`.
+- **Skip for now:** screenshots (see Story 1 below for the full version).
+- **Test:** Mock both services. Submitting adds a list item. An empty input shows an error and doesn't call the service.
+
+### Q6. Delete an Inspiration
+> As a designer, I want to remove an inspiration I no longer need.
+
+- **Done when:** Each inspiration has a "Remove" button. Clicking it removes the inspiration from the list and from IndexedDB.
+- **How:** Call `deleteInspiration(inspiration.id)`, then `setInspirations(prev => prev.filter(i => i.id !== inspiration.id))`.
+- **Test:** Click Remove and check that the item is gone and `deleteInspiration` was called with the right id.
+
+### Q7. Edit Notes on an Inspiration
+> As a designer, I want to add a short note to an inspiration.
+
+- **Done when:** Each inspiration has an "Edit note" button that opens a textarea with Save and Cancel. Save persists the note, and the note shows under the title.
+- **How:** Keep `editingId` and `draft` in state. On Save, call `updateInspiration(id, { notes: draft })` and replace that item in the list with the returned object.
+- **Test:** Edit, save, and check that the note text is shown and `updateInspiration` was called.
+
+### Q8. Fix the Project Detail Loading Race (Bug Story)
+> As a user, when I switch quickly between projects, I want to see the right project.
+
+- **Done when:** Navigating from project A to project B never shows A's data on B's page.
+- **How:** Declare `let cancelled = false` in the effect body (not inside `fetchProject`). Check `if (!cancelled)` before each `setState`. Return `() => { cancelled = true }` from the `useEffect` itself.
+- **Test:** Hard to unit test. Explain the bug, and test by resolving the two `getProject` mocks out of order.
+
+### Q9. Small AI Story: Suggest a Project Description
+> As a user, I want a "Suggest description" button that fills in a description from the project name.
+
+- **Done when:** In the create/edit form, clicking "✨ Suggest" fills the description field with suggested text. The user can still edit it before saving. The button shows "Thinking..." while waiting. On failure, it shows an error and the field is left unchanged.
+- **How:**
+  1. Create `src/services/ai.ts` with `suggestDescription(name)`. For the interview, return mock text after `mockLatency(800)`.
+  2. Explain that a real version would `fetch('/api/suggest')` through a small server proxy, so the API key is never in the browser.
+  3. Treat the AI text as plain text: trim it, cap its length, and never render it as HTML.
+- **Test:** Mock `suggestDescription`. Clicking fills the textarea. A rejected promise shows the error.
+
+| Story | Main skill shown | Rough time |
+|-------|------------------|-----------|
+| Q1 Confirm delete | Event handling, UX safety | 5 min |
+| Q2 Empty / no results | Conditional rendering | 10 min |
+| Q3 Sort | `useMemo`, derived state | 10 min |
+| Q4 Dashboard | Data fetching, `Link` | 15 min |
+| Q5 Add inspiration | Forms, services, async | 20 min |
+| Q6 Delete inspiration | List state updates | 10 min |
+| Q7 Edit notes | Inline editing | 15 min |
+| Q8 Race fix | `useEffect` cleanup | 10 min |
+| Q9 AI suggest | Async UI, AI safety basics | 15 min |
+
+---
+
 ## Story 1: Capture an Inspiration from a URL
 
 ### User Story
