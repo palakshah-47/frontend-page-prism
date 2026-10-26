@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 import { getDB } from '../utils/indexedDB'
-import { Inspiration } from '../models/schema'
+import { Inspiration, WebsiteMetadata } from '../models/schema'
 import mockLatency from '../utils/mockLatency'
 
 /**
@@ -97,3 +97,11 @@ export async function deleteInspiration(
   const db = await getDB()
   await db.delete('inspirations', id)
 }
+
+export const fallbackMetadata = (url: string): WebsiteMetadata => ({
+  url, title: url, description: null, favicon: null, author: null,
+  date: null, image: null, logo: null, publisher: null, ogTitle: null,
+  ogDescription: null, ogImage: [], ogLocale: null, ogUrl: null,
+  charset: null, urlRequested: url, urlResolved: url
+})
+  

@@ -1,6 +1,11 @@
 import { MemoryRouter } from 'react-router-dom'
 import ProjectDetail from './ProjectDetail'
 import { getProject, deleteProject, updateProject } from '../services/project'
+import {
+  createInspiration,
+  getInspirationsByProject,
+} from '../services/inspiration'
+import { getMetadata } from '../utils/api'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
 jest.mock('../services/project', () => ({
@@ -9,8 +14,18 @@ jest.mock('../services/project', () => ({
   updateProject: jest.fn(),
 }))
 
+jest.mock('../services/inspiration', () => ({
+  createInspiration: jest.fn(),
+  getInspirationsByProject: jest.fn().mockResolvedValue([]),
+}))
+
+jest.mock('../utils/api', () => ({
+  getMetadata: jest.fn(),
+}))
+
 beforeEach(() => {
   jest.clearAllMocks()
+  getInspirationsByProject.mockResolvedValue([])
 })
 
 afterEach(() => {
@@ -44,6 +59,61 @@ describe('project detail page renders on page load', () => {
     )
     expect(await screen.findByText('Project one')).toBeInTheDocument()
     expect(screen.getByText('Project Details')).toBeInTheDocument()
+  })
+
+  it('loads and displays inspirations in newest-first order', async () => {
+    getProject.mockResolvedValue(mockProject)
+    getInspirationsByProject.mockResolvedValue([
+      {
+        id: 'inspiration-old',
+        createdAt: '2024-01-20T00:00:00.000Z',
+        websiteMetadata: { title: 'Older inspiration', url: 'old.example' },
+      },
+      {
+        id: 'inspiration-new',
+        createdAt: '2024-01-22T00:00:00.000Z',
+        websiteMetadata: { title: 'Newer inspiration', url: 'new.example' },
+      },
+    ])
+
+    render(
+      <MemoryRouter>
+        <ProjectDetail />
+      </MemoryRouter>
+    )
+
+    const newer = await screen.findByText('Newer inspiration')
+    const older = screen.getByText('Older inspiration')
+    expect(newer.compareDocumentPosition(older)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    )
+  })
+
+  it('does not show an error after successfully saving an inspiration', async () => {
+    getProject.mockResolvedValue(mockProject)
+    getMetadata.mockResolvedValue({
+      title: 'Stripe',
+      url: 'https://stripe.com/',
+    })
+    createInspiration.mockResolvedValue({
+      id: 'inspiration-stripe',
+      websiteMetadata: { title: 'Stripe', url: 'https://stripe.com/' },
+    })
+
+    render(
+      <MemoryRouter>
+        <ProjectDetail />
+      </MemoryRouter>
+    )
+
+    await screen.findByText('Project one')
+    fireEvent.change(screen.getByLabelText('Website URL'), {
+      target: { value: 'stripe.com' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }))
+
+    expect(await screen.findByText('Stripe')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
   it('updates the project when clicking update project button', async () => {

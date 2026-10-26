@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { getProject, deleteProject } from '../services/project'
+import {
+  getInspirationsByProject,
+  fallbackMetadata,
+  createInspiration,
+} from '../services/inspiration'
 import Button from '../components/Button'
 import styles from './ProjectDetail.module.css'
 import UpdateProject from './UpdateProject'
+import { getMetadata } from '../utils/api'
+import AddInspirationForm from './AddInspirationForm'
 
 const ProjectDetail = () => {
   const [project, setProject] = useState(null)
+  const [inspirations, setInspirations] = useState(null)
   const { id } = useParams()
   const navigate = useNavigate()
   const [isUpdate, setIsUpdate] = useState(false)
@@ -14,25 +22,53 @@ const ProjectDetail = () => {
 
   useEffect(() => {
     let cancelled = false
-    const fetchProject = async () => {
+    const load = async () => {
+      setStatus('loading')
       try {
+        const [projectData, items] = await Promise.all([
+          getProject(id),
+          getInspirationsByProject(id),
+        ])
         if (cancelled) return
-        const projectData = await getProject(id)
         if (!projectData) {
           setStatus('notfound')
           return
         }
         setProject(projectData)
+        setInspirations(
+          [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        )
         setStatus('ready')
       } catch (err) {
         !cancelled && setStatus('error')
       }
     }
-    fetchProject()
+    load()
     return () => {
       cancelled = true
     }
   }, [id])
+
+  const handleAddInspiration = async (url) => {
+    let websiteMetadata
+    try {
+      const { host, pathname } = new URL(url)
+      websiteMetadata = await getMetadata(
+        `${host}${pathname === '/' ? '' : pathname}`
+      )
+    } catch {
+      websiteMetadata = fallbackMetadata(url)
+    }
+
+    const created = await createInspiration({
+      projectId: id,
+      websiteMetadata,
+      screenshot_uri: '',
+      notes: '',
+    })
+
+    setInspirations((prev) => [created, ...prev])
+  }
 
   const handleDelete = async () => {
     const confirmed = window.confirm(
@@ -75,14 +111,19 @@ const ProjectDetail = () => {
       </div>
       <div className={styles.section}>
         <h2 className={styles.subheading}>Inspirations</h2>
-        {project.inspirations?.length > 0 ? (
-          <ul className={styles.inspirationList}>
-            {project.inspirations.map((inspiration) => (
-              <li key={inspiration.id}>
-                {inspiration.websiteMetadata.title ||
-                  inspiration.websiteMetadata.url}
-              </li>
-            ))}
+        <AddInspirationForm onAdd={handleAddInspiration} />
+        {inspirations?.length > 0 ? (
+          <ul className={styles.inspirationList} aria-label="Inspirations">
+            {inspirations.map((inspiration) => {
+              const { url, title } = inspiration.websiteMetadata
+              return (
+                <li key={inspiration.id}>
+                  <a href={url} target="_blank" rel="noopenar noreferrer">
+                    {title || url}
+                  </a>
+                </li>
+              )
+            })}
           </ul>
         ) : (
           <p>No inspirations added yet.</p>
