@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import { getProject } from '../services/project'
+import { useNavigate, useParams } from 'react-router-dom'
+import { deleteProject, getProject } from '../services/project'
 import Button from '../components/Button'
 import styles from './ProjectDetail.module.css'
+import AddProject from './AddProject'
 
 const ProjectDetail = () => {
   const [project, setProject] = useState(null)
   const { id } = useParams()
+  const navigate = useNavigate()
+  const [isUpdate, setIsUpdate] = useState(false)
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -20,9 +23,19 @@ const ProjectDetail = () => {
     return <div>Loading...</div>
   }
 
+  const handleDelete = async () => {
+    const confirmed = window.confirm('Are you sure to delete this project?')
+    if (!confirmed) return
+    try {
+      await deleteProject(project.id)
+      navigate('/projects')
+    } catch {
+      window.alert('Could not delete the project. Please try again')
+    }
+  }
+
   return (
     <div className={styles.container}>
-      <h1 className={styles.heading}>{project.name}</h1>
       <p className={styles.description}>{project.description}</p>
       <div className={styles.section}>
         <h2 className={styles.subheading}>Project Details</h2>
@@ -51,9 +64,14 @@ const ProjectDetail = () => {
         )}
       </div>
       <div className={styles.buttonContainer}>
-        <Button className={styles.editButton}>Edit Project</Button>
-        <Button className={styles.deleteButton}>Delete Project</Button>
+        <Button className={styles.editButton} onClick={() => setIsUpdate(true)}>
+          Edit Project
+        </Button>
+        <Button className={styles.deleteButton} onClick={handleDelete}>
+          Delete Project
+        </Button>
       </div>
+      {isUpdate && <AddProject project={project} />}
     </div>
   )
 }
