@@ -116,6 +116,22 @@ describe('project detail page renders on page load', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
+  it('shows an error message when url is empty and clicked on Add', async () => {
+    getProject.mockResolvedValue(mockProject)
+    render(
+      <MemoryRouter>
+        <ProjectDetail />
+      </MemoryRouter>
+    )
+
+    await screen.findByText('Project one')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/Enter a valid URL/)
+    expect(createInspiration).not.toHaveBeenCalled()
+  })
+
   it('updates the project when clicking update project button', async () => {
     getProject.mockResolvedValue(mockProject)
     updateProject.mockResolvedValue(mockUpdateProject)
