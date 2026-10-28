@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createProject, updateProject } from '../services/project'
 import { useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
+import { suggestDescription } from '../services/ai'
 
 const UpdateProject = ({ project, setProjects }) => {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [error, setError] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [isSuggesting, setIsSuggesting] = useState(false)
+  const [suggestError, setSuggestError] = useState('')
+  const suggestionControllerRef = useRef(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -15,6 +19,10 @@ const UpdateProject = ({ project, setProjects }) => {
     setName(project.name)
     setDescription(project.description)
   }, [project])
+
+  useEffect(() => {
+    return () => suggestionControllerRef.current?.abort()
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -56,6 +64,36 @@ const UpdateProject = ({ project, setProjects }) => {
     }
   }
 
+  const handleSuggest = async () => {
+    if (suggestionControllerRef.current) {
+      suggestionControllerRef.current.abort()
+      return
+    }
+
+    const controller = new AbortController()
+    const previousDescription = description
+    suggestionControllerRef.current = controller
+    setSuggestError('')
+    setIsSuggesting(true)
+
+    try {
+      const suggestion = await suggestDescription(
+        name,
+        controller.signal,
+        setDescription
+      )
+      if (suggestion) setDescription(suggestion)
+    } catch {
+      setDescription(previousDescription)
+      setSuggestError('Could not suggest a description. Please try again.')
+    } finally {
+      if (suggestionControllerRef.current === controller) {
+        suggestionControllerRef.current = null
+      }
+      setIsSuggesting(false)
+    }
+  }
+
   const buttonText = project ? 'Update Project' : 'Create Project'
   const savingButtonText = project ? 'Saving...' : 'Creating...'
 
@@ -86,6 +124,10 @@ const UpdateProject = ({ project, setProjects }) => {
             className="mt-1 w-[50%] rounded border border-gray-300 bg-white p-2 text-gray-900 caret-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
             onChange={(e) => setDescription(e.target.value)}
           ></textarea>
+          <Button type="button" onClick={handleSuggest}>
+            {isSuggesting ? 'Stop' : '✨ Suggest'}
+          </Button>
+          {suggestError && <p role="alert">{suggestError}</p>}
         </div>
         {error && (
           <p id="project-error" role="alert" className="text-sm text-red-600">
