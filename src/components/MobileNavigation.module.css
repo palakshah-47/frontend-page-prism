@@ -26,6 +26,11 @@
   font-weight: 500;
 }
 
+.navigationItem:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
 .navigationItemCurrent {
   background-color: #111827;
   color: #ffffff;
