@@ -3,6 +3,7 @@ import App from './App'
 import Dashboard from './pages/Dashboard'
 import Projects from './pages/Projects'
 import ProjectDetail from './pages/ProjectDetail'
+import Inspirations from './pages/Inspirations'
 const router = createBrowserRouter([
   {
     path: '/',
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
       {
         path: 'projects/:id/:name?',
         element: <ProjectDetail />,
+      },
+      {
+        path: 'inspirations',
+        element: <Inspirations />,
       },
     ],
   },

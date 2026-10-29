@@ -6,6 +6,7 @@ import styles from './MobileNavigation.module.css'
 const navigation = [
   { name: 'Dashboard', href: '/' },
   { name: 'Projects', href: '/projects' },
+  { name: 'Inspirations', href: '/inspirations' },
 ]
 
 const MobileNavigation = () => {
