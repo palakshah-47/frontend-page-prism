@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { getAllProjects, createProject } from '../services/project'
 import Button from '../components/Button'
 import UpdateProject from './UpdateProject'
+import useDebounce from '../hooks/useDebounce'
 
 const Projects = () => {
   const [projects, setProjects] = useState([])
@@ -10,6 +11,7 @@ const Projects = () => {
   const query = searchParams.get('search') ?? ''
   const [status, setStatus] = useState('loading')
   const searchRef = useRef(null)
+  const debounceQuery = useDebounce(query, 300)
 
   useEffect(() => {
     let cancelled = false
@@ -29,7 +31,7 @@ const Projects = () => {
     }
   }, [])
 
-  const trimmedQuery = query.trim();
+  const trimmedQuery = debounceQuery.trim();
 
   const updateSearchQuery = (value) => {
     setSearchParams((currentSearchParams) => {
@@ -49,11 +51,11 @@ const Projects = () => {
   }
 
   const visibleProjects = useMemo(() => {
-    const q = query.trim().toLowerCase()
+    const q = debounceQuery.trim().toLowerCase()
     return projects
       .filter((p) => p.name.toLowerCase().includes(q))
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-  }, [projects, query])
+  }, [projects, debounceQuery])
 
   return (
     <div>
