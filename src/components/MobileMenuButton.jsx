@@ -5,7 +5,9 @@ import styles from './MobileMenuButton.module.css'
 const MobileMenuButton = ({ open }) => {
   return (
     <DisclosureButton className={styles.button}>
-      <span className="sr-only">Open main menu</span>
+      <span className="sr-only">
+        {open ? 'Close main menu' : 'Open main menu'}
+      </span>
       {open ? (
         <XMarkIcon className={styles.icon} aria-hidden="true" />
       ) : (
