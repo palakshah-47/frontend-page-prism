@@ -13,21 +13,27 @@ const DesktopNavigation = () => {
   return (
     <div className={styles.container}>
       <div className={styles.navList}>
-        {navigation.map((item) => (
-          <Link
-            key={item.name}
-            to={item.href}
-            className={clsx(
-              styles.navItem,
-              location.pathname === item.href
-                ? styles.navItemCurrent
-                : styles.navItemDefault
-            )}
-            aria-current={location.pathname === item.href ? 'page' : undefined}
-          >
-            {item.name}
-          </Link>
-        ))}
+        {navigation.map((item) => {
+          return (
+            <Link
+              key={item.name}
+              to={item.href}
+              className={clsx(
+                styles.navItem,
+                location.pathname === item.href ||
+                  (location.pathname !== '/' &&
+                    location.pathname.startsWith(`${item.href}/`))
+                  ? styles.navItemCurrent
+                  : styles.navItemDefault
+              )}
+              aria-current={
+                location.pathname === item.href ? 'page' : undefined
+              }
+            >
+              {item.name}
+            </Link>
+          )
+        })}
       </div>
     </div>
   )

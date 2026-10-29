@@ -20,7 +20,9 @@ const MobileNavigation = () => {
           to={item.href}
           className={clsx(
             styles.navigationItem,
-            location.pathname === item.href
+            location.pathname === item.href ||
+              (location.pathname !== '/' &&
+                location.pathname.startsWith(`${item.href}/`))
               ? styles.navigationItemCurrent
               : styles.navigationItemDefault
           )}

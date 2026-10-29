@@ -9,7 +9,7 @@ const getTitle = (pathname) => {
     return 'Projects'
   }
 
-  if (pathname.startsWith('/projects')) {
+  if (pathname.startsWith('/projects/')) {
     const segments = pathname.split('/').filter(Boolean)
     const nameSegment = segments[segments.length - 1]
     if (nameSegment) {
