@@ -19,6 +19,11 @@ const ProjectDetail = () => {
     fetchProject()
   }, [id])
 
+  const handleDelete = async () => {
+    await deleteProject(project.id)
+    navigate('/projects')
+  }
+
   if (!project) {
     return <div>Loading...</div>
   }

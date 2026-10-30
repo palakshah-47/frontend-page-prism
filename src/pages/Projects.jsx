@@ -4,6 +4,7 @@ import { getAllProjects, createProject } from '../services/project'
 import Button from '../components/Button'
 import AddProject from './AddProject'
 
+
 const Projects = () => {
   const [projects, setProjects] = useState([])
 
@@ -28,6 +29,7 @@ const Projects = () => {
             <small>{project.id}</small>
             <p className="text-sm text-gray-600">{project.description}</p>
           </Link>
+         
         </div>
       ))}
     </div>
